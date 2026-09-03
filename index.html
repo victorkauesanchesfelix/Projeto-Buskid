@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light" data-font-size="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BusKid - Transporte Escolar Inteligente</title>
+  <meta name="description" content="Plataforma de transporte escolar com suporte a Modo Claro e Escuro, segurança 100% gratuita, rotas inteligentes, mapa de demanda, transporte avulso (BusKid Express) e documentação transparente da van.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet Maps CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  
+  <!-- Cache-Busting Stylesheet link -->
+  <link rel="stylesheet" href="css/styles.css?v=4.0">
+
+  <script>
+    // INLINE THEME SWITCHER ENGINE (INSTANT & BULLETPROOF)
+    (function() {
+      var savedTheme = localStorage.getItem('buskid_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+
+    function toggleBusKidTheme() {
+      var current = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('buskid_theme', next);
+      
+      var quickBtn = document.getElementById('btn-quick-theme-toggle');
+      var modalBtn = document.getElementById('btn-modal-theme-toggle');
+      var label = next === 'dark' ? '🌙 Modo Escuro' : '☀️ Modo Claro';
+
+      if (quickBtn) quickBtn.innerHTML = label;
+      if (modalBtn) modalBtn.innerHTML = label;
+
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast('🎨 Tema alterado para: ' + (next === 'dark' ? 'Modo Escuro 🌙' : 'Modo Claro ☀️'));
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- NAVBAR SLIM COM SELETOR DE PERFIL E MODO ESCURO -->
+  <nav class="navbar">
+    <a href="#" class="brand">
+      <div class="brand-icon">🚌</div>
+      <div>
+        <div class="brand-title">Bus<span>Kid</span></div>
+        <div class="brand-tagline">TRANSPORTE ESCOLAR INTELIGENTE</div>
+      </div>
+    </a>
+
+    <div class="role-switcher-container">
+      <span class="role-switcher-label">Visão:</span>
+      <button class="role-btn active" data-role="driver">
+        🟡 Motorista
+      </button>
+      <button class="role-btn" data-role="parent">
+        👨‍👩‍👧 Pais
+      </button>
+      <button class="role-btn" data-role="school">
+        🏫 Escola
+      </button>
+      <button class="role-btn" data-role="plans">
+        💳 Planos & TCC
+      </button>
+      <button class="role-btn" data-role="sql">
+        🗄️ SQL
+      </button>
+    </div>
+
+    <!-- BOTÕES DE CONFIGURAÇÕES E TEMA NA NAVBAR -->
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <button class="theme-switch-btn" id="btn-quick-theme-toggle" onclick="toggleBusKidTheme()" title="Alternar Modo Claro / Escuro">
+        ☀️ Modo Claro
+      </button>
+      <button class="theme-switch-btn" id="btn-open-settings" style="background: transparent; border-color: #3F3F46;" title="Configurações do Site">
+        ⚙️
+      </button>
+    </div>
+  </nav>
+
+  <main class="app-container">
+
+    <!-- TOP BAR DE DESTAQUE TCC E CONFIGURAÇÕES DE TEMA -->
+    <div class="tcc-top-bar">
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <span class="tcc-top-badge">🛡️ SEGURANÇA 100% GRATUITA</span>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          Cadastros, identificação do perueiro, vistorias da van e embarque são <strong>R$ 0/mês</strong>.
+        </span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">Simulação TCC:</span>
+        <button class="btn-action" id="btn-toggle-driver-plan" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; background: var(--yellow-brand); color: #09090B;">
+          💎 Plano Perueiro: Premium (R$ 24,90)
+        </button>
+        <button class="btn-action" id="btn-trigger-15min-alert" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; background: #3B82F6;">
+          🔔 Disparar 15min Antes
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- VISÃO 1: 🟡 MOTORISTA (TIO CARLOS) -->
+    <!-- ============================================================ -->
+    <section id="view-driver" class="role-view active">
+
+      <!-- BANNER INTERATIVO: PROPOSTA DE TRANSPORTE AVULSO RECEBIDA (BUSKID EXPRESS) -->
+      <div id="driver-express-offer-banner" class="express-offer-card" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="express-badge">⚡ CORRIDA AVULSA SOLICITADA</span>
+            <span style="font-size: 0.8rem; color: var(--yellow-accent); font-weight: 700;">(BusKid Express)</span>
+          </div>
+          <span id="express-banner-price-tag" style="font-size: 1.25rem; font-weight: 800; color: #10B981; background: #064E3B; padding: 0.2rem 0.75rem; border-radius: var(--radius-pill);">
+            + R$ 28,50 no PIX
+          </span>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.06); padding: 0.85rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.25rem;">
+            👤 Aluno: <span id="express-banner-child-name">Enzo Gabriel</span> <span style="font-size: 0.8rem; color: #A1A1AA; font-weight: 400;">(Pai: Marcelo Gabriel - Sem Contrato Mensal)</span>
+          </div>
+          <p style="font-size: 0.82rem; color: #E4E4E7; margin-bottom: 0.35rem;">
+            📍 Endereço de Coleta: <strong id="express-banner-address">Rua Augusta, 850 (Consolação)</strong> ➔ 🏫 Escola Cantinho do Saber
+          </p>
+          <div style="display: flex; gap: 1rem; font-size: 0.78rem; color: var(--yellow-accent); font-weight: 700;">
+            <span id="express-banner-deviation">🚗 Desvio da Rota Original: +800 metros</span>
+            <span id="express-banner-time">⏱️ Tempo Adicional: apenas +4 minutos</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
+          <button class="btn-action" id="btn-reject-express-offer" style="background: #7F1D1D; color: #FCA5A5; font-size: 0.82rem;">
+            🔴 Recusar Proposta
+          </button>
+          <button class="btn-action" id="btn-accept-express-offer" style="background: #10B981; color: #FFFFFF; font-size: 0.85rem; font-weight: 800; padding: 0.5rem 1.25rem;">
+            🟢 ACEITAR PROPOSTA (Adicionar à Rota + R$ 28,50)
+          </button>
+        </div>
+      </div>
+
+      <!-- BANNER DE FALTA CONFIRMADA -->
+      <div id="driver-absence-alert" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1rem; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.2rem;">🚨</span>
+          <div>
+            <strong style="color: #991B1B; font-size: 0.88rem;">Falta Confirmada pelos Pais!</strong>
+            <p id="alert-body" style="font-size: 0.8rem; color: #7F1D1D;"></p>
+          </div>
+        </div>
+        <button class="btn-action" id="btn-dismiss-alert" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; background: #991B1B;">Entendido</button>
+      </div>
+
+      <!-- CARD DE DEMANDA POR REGIÃO & MATCH (PREMIUM TCC) -->
+      <div id="driver-premium-demand-card" class="card" style="border-left: 4px solid var(--yellow-brand);">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📍</span> DEMANDA DA REGIÃO & MATCH DE ALUNOS (PREMIUM)
+          </div>
+          <span class="badge badge-yellow">5 VAGAS LIVRES NA PERUA</span>
+        </div>
+        <div class="grid-3">
+          <div style="background: var(--bg-card-subtle); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between;">
+              <strong style="font-size: 0.9rem;">📍 Pinheiros</strong>
+              <span class="badge badge-green">98% MATCH</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.3rem 0;">24 Alunos procurando van</p>
+            <button class="btn-action btn-match-accept" style="width: 100%; justify-content: center; padding: 0.35rem; font-size: 0.75rem; background: var(--yellow-brand); color: #09090B;">
+              🎯 Pegar 3 Alunos
+            </button>
+          </div>
+
+          <div style="background: var(--bg-card-subtle); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between;">
+              <strong style="font-size: 0.9rem;">📍 Moema</strong>
+              <span class="badge badge-green">91% MATCH</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.3rem 0;">18 Alunos procurando van</p>
+            <button class="btn-action btn-match-accept" style="width: 100%; justify-content: center; padding: 0.35rem; font-size: 0.75rem; background: var(--yellow-brand); color: #09090B;">
+              🎯 Pegar 2 Alunos
+            </button>
+          </div>
+
+          <div style="background: var(--bg-card-subtle); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between;">
+              <strong style="font-size: 0.9rem;">📍 Perdizes</strong>
+              <span class="badge badge-yellow">85% MATCH</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.3rem 0;">15 Alunos procurando van</p>
+            <button class="btn-action btn-match-accept" style="width: 100%; justify-content: center; padding: 0.35rem; font-size: 0.75rem; background: var(--border-subtle); color: var(--text-main);">
+              🎯 Ver Detalhes
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL PRINCIPAL: MAPA À ESQUERDA + CHAMADA À DIREITA -->
+      <div class="main-dashboard-grid">
+
+        <!-- COLUNA ESQUERDA: MAPA GPS & CONTROLES -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🗺️</span> ROTA INTELIGENTE GPS (SÃO PAULO)
+              </div>
+              <div style="display: flex; gap: 0.35rem;">
+                <button class="btn-action" id="btn-animate-van" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background: #10B981;">▶️ Simular</button>
+                <button class="btn-action" id="btn-recalculate-route" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background: var(--yellow-brand); color: #09090B;">🧠 Recalcular</button>
+                <button class="btn-action" id="btn-open-waze" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background: #33CCFF; color: #000000;">🧭 Waze</button>
+              </div>
+            </div>
+
+            <!-- CHIPS DE PROXIMIDADE DA ROTA -->
+            <div id="proximity-bar" class="proximity-container">
+              <div id="proximity-chips-list" style="display: flex; gap: 0.4rem; flex-wrap: wrap;"></div>
+            </div>
+
+            <div id="route-savings-banner" style="display: none; background: #065F46; color: #FFFFFF; padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem; font-size: 0.8rem;">
+              <span id="route-savings-text"></span>
+            </div>
+
+            <!-- RENDERIZADOR DO MAPA LEAFLET -->
+            <div id="map-container">
+              <div id="map"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUNA DIREITA: CHAMADA E FINANCEIRO E DOCUMENTAÇÃO -->
+        <div>
+          <div class="tab-group">
+            <button class="tab-btn active" data-driver-tab="chamada">📋 Lista de Chamada</button>
+            <button class="tab-btn" data-driver-tab="financeiro">💰 Financeiro / Lucro</button>
+            <button class="tab-btn" data-driver-tab="manutencao">🛠️ Manutenção & Docs</button>
+          </div>
+
+          <!-- SUBABA 1: CHAMADA -->
+          <div id="driver-tab-chamada" class="driver-subtab">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span>📝</span> Embarque da Manhã
+                </div>
+                <span class="badge badge-green" id="driver-boarded-count">2 / 5 Embarcados</span>
+              </div>
+              <div id="students-rollcall-container"></div>
+            </div>
+          </div>
+
+          <!-- SUBABA 2: FINANCEIRO E LUCRO -->
+          <div id="driver-tab-financeiro" class="driver-subtab" style="display: none;">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span>💰</span> Estimativa de Lucro Líquido</div>
+                <span class="badge badge-green">AGOSTO / 2026</span>
+              </div>
+              <div class="grid-2" style="margin-bottom: 1rem;">
+                <div class="stat-box">
+                  <div class="stat-label">Faturamento</div>
+                  <div class="stat-value" id="stat-faturamento" style="font-size: 1.2rem;">R$ 4.800,00</div>
+                </div>
+                <div class="stat-box" style="border-left: 3px solid #10B981;">
+                  <div class="stat-label">Lucro Líquido</div>
+                  <div class="stat-value" id="stat-lucro" style="font-size: 1.2rem; color: #047857;">R$ 3.410,00</div>
+                </div>
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-muted);">
+                    <th style="padding: 0.4rem;">Aluno / Tipo</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="financials-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SUBABA 3: MANUTENÇÃO & DOCUMENTAÇÃO DA VAN -->
+          <div id="driver-tab-manutencao" class="driver-subtab" style="display: none;">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><span>🚐</span> Documentação & Vistorias da Sprinter</div>
+                <button class="btn-action" id="btn-open-driver-docs-modal" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background: var(--yellow-brand); color: #09090B;">
+                  ✏️ Atualizar Docs
+                </button>
+              </div>
+
+              <!-- RESUMO DAS LICENÇAS DO MOTORISTA -->
+              <div class="doc-status-item">
+                <div>
+                  <strong style="font-size: 0.85rem;">🛡️ DETRAN-SP (Vistoria Semestral)</strong>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);" id="driver-doc-detran-label">Válido até 15/11/2026 (Selo nº DETRAN-SP 2026/8849)</p>
+                </div>
+                <span class="countdown-chip" id="driver-doc-detran-chip">🟢 VÁLIDO</span>
+              </div>
+
+              <div class="doc-status-item">
+                <div>
+                  <strong style="font-size: 0.85rem;">⏱️ Tacógrafo INMETRO</strong>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);" id="driver-doc-tacografo-label">Aferição realizada (Validade: 10/02/2027)</p>
+                </div>
+                <span class="countdown-chip">🟢 OK</span>
+              </div>
+
+              <div class="doc-status-item">
+                <div>
+                  <strong style="font-size: 0.85rem;">👤 CNH & Curso Escolar (Tio Carlos)</strong>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);">Categoria D - MOPP / Transporte de Escolares (OK)</p>
+                </div>
+                <span class="countdown-chip">🟢 VERIFICADO</span>
+              </div>
+
+              <div class="doc-status-item">
+                <div>
+                  <strong style="font-size: 0.85rem;">🏙️ Alvará Ponto Prefeitura</strong>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);">Licença Municipal nº 8849 - São Paulo</p>
+                </div>
+                <span class="countdown-chip">🟢 ATIVO</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- VISÃO 2: 👨‍👩‍👧 PAIS (DONA MARIANA) -->
+    <!-- ============================================================ -->
+    <section id="view-parent" class="role-view">
+      <div class="grid-2">
+        <!-- STATUS DO FILHO -->
+        <div class="card" style="background: var(--bg-pastel-yellow); border-color: var(--yellow-brand);">
+          <div class="card-header">
+            <div class="card-title"><span>👧🏻</span> Sofia Mendes (2º Ano B)</div>
+            <span class="badge badge-yellow" id="parent-child-status-badge">AGUARDANDO PERUA</span>
+          </div>
+          <div style="text-align: center; padding: 1rem 0;">
+            <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80" 
+                 alt="Sofia" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #18181B; object-fit: cover;">
+            <h3 style="font-size: 1.2rem; margin-top: 0.5rem;" id="parent-status-headline">Sofia está aguardando em casa</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);" id="parent-status-subtext">Previsão de Coleta: 07:10 hs na Perua 04 do Tio Carlos</p>
+          </div>
+        </div>
+
+        <!-- AVISO DE AUSÊNCIA & FICHA DO MOTORISTA & DOCUMENTAÇÃO DA PERUA -->
+        <div>
+          <!-- CONTRATAÇÃO DE PERUA AVULSA (BUSKID EXPRESS) -->
+          <div class="card" style="border: 2px solid var(--yellow-brand); background: var(--bg-card); margin-bottom: 1rem;">
+            <div class="card-header">
+              <div class="card-title" style="color: var(--yellow-brand);">
+                <span>⚡</span> CONTRATAR PERUA AVULSA (HOJE)
+              </div>
+              <span class="express-badge">BUSKID EXPRESS</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Seu carro quebrou ou teve um imprevisto? Envie uma proposta de coleta para uma perua parceira que passe perto da sua casa hoje!
+            </p>
+            <button class="btn-action" id="btn-open-express-modal" style="background: var(--yellow-brand); color: #09090B; width: 100%; justify-content: center; font-weight: 800;">
+              ⚡ Solicitar Corrida Avulsa de Emergência
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span>👨🏻‍✈️</span> Motorista da Perua</div>
+              <span class="badge badge-green">VERIFICADO</span>
+            </div>
+            <p style="font-size: 0.85rem;"><strong>Carlos Eduardo (Tio Carlos)</strong> - Sprinter Amarela (ABC-1234)</p>
+
+            <!-- NOVO BOTÃO: VER DOCUMENTAÇÃO & VISTORIAS DA PERUA -->
+            <button class="btn-action" id="btn-open-parent-docs-modal" style="margin-top: 0.6rem; width: 100%; justify-content: center; background: #065F46; color: #FFFFFF;">
+              🛡️ Ver Documentação & Vistorias da Van
+            </button>
+
+            <a href="https://wa.me/5511987654321" target="_blank" class="btn-action btn-whatsapp" style="margin-top: 0.4rem; width: 100%; justify-content: center; text-decoration: none;">
+              💬 Falar no WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- VISÃO 3: 🏫 ESCOLA -->
+    <!-- ============================================================ -->
+    <section id="view-school" class="role-view">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🏫</span> Portão Principal - Escola Cantinho do Saber</div>
+          <span class="badge badge-green">ENTRADA (07:00 - 07:45)</span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border-subtle); color: var(--text-muted);">
+              <th style="padding: 0.5rem;">Perua</th>
+              <th>Condutor</th>
+              <th>Alunos</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="padding: 0.5rem;"><strong>Perua 04</strong> (ABC-1234)</td>
+              <td>Tio Carlos</td>
+              <td>5 Alunos</td>
+              <td><span class="badge badge-yellow" id="school-van4-status">🟡 EM TRÂNSITO</span></td>
+            </tr>
+            <tr>
+              <td style="padding: 0.5rem;"><strong>Perua 02</strong> (XYZ-9876)</td>
+              <td>Tia Ana</td>
+              <td>8 Alunos</td>
+              <td><span class="badge badge-green">🟢 NO PORTÃO</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- VISÃO 4: 💳 COMPARATIVO DE PLANOS (MODELAGEM TCC) -->
+    <!-- ============================================================ -->
+    <section id="view-plans" class="role-view">
+      <div class="card" style="margin-bottom: 1.25rem;">
+        <div class="card-header">
+          <div class="card-title"><span>💳</span> MODELAGEM DE PLANOS & PREÇOS (PROJETO DE TCC)</div>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">
+          Recursos de segurança das crianças são <strong>100% Gratuitos</strong>. Assinatura Premium focada em inteligência, rotas otimizadas e mapa de demanda.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" style="border: 2px solid var(--yellow-brand);">
+          <div class="card-header">
+            <div class="card-title">🚐 Planos para Perueiros</div>
+          </div>
+          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>🆓 Gratuito (R$ 0/mês):</strong> 1 rota + segurança, chamada e documentação da van.</p>
+          <p style="font-size: 0.85rem; color: #047857; font-weight: 700;"><strong>💎 Premium (R$ 24,90/mês):</strong> Rotas Inteligentes, Mapa de Demanda, Match, 15min Antes e Corridas Avulsas.</p>
+        </div>
+
+        <div class="card" style="border: 2px solid #3B82F6;">
+          <div class="card-header">
+            <div class="card-title">👨‍👩‍👧 Planos para Responsáveis</div>
+          </div>
+          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>🆓 Gratuito (R$ 0/mês):</strong> Identificação do perueiro, vistorias da van e aviso de falta.</p>
+          <p style="font-size: 0.85rem; color: #1D4ED8; font-weight: 700;"><strong>💎 Premium (R$ 7,90/mês):</strong> Rastreamento GPS ao vivo no mapa e ETA exato.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- VISÃO 5: 🗄️ BANCO DE DADOS SQL -->
+    <!-- ============================================================ -->
+    <section id="view-sql" class="role-view">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🗄️</span> Modelo SQL Relacional (PostgreSQL / Supabase)</div>
+          <button class="btn-action" id="btn-copy-sql" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">📋 Copiar SQL</button>
+        </div>
+        <pre id="sql-code-container" style="background: #09090B; color: #A7F3D0; padding: 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; overflow-x: auto;"></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DOCUMENTAÇÃO DA VAN PARA OS PAIS (FICHA DE SEGURANÇA) -->
+  <div id="modal-parent-van-docs" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <h3 style="font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
+          🛡️ Documentação & Vistorias da Perua
+        </h3>
+        <button id="btn-close-parent-docs-modal" style="background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-main);">&times;</button>
+      </div>
+
+      <div class="quality-seal-box">
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; opacity: 0.9;">Garantia de Segurança BusKid</div>
+          <div style="font-size: 1.1rem; font-weight: 800;">VERIFICADO & APROVADO</div>
+        </div>
+        <div style="font-size: 1.8rem;">🔰</div>
+      </div>
+
+      <div style="font-size: 0.85rem; margin-bottom: 1rem;">
+        <p><strong>Veículo:</strong> Mercedes-Benz Sprinter 516 CDi (Placa: ABC-1234)</p>
+        <p style="color: var(--text-muted);"><strong>Condutor Autorizado:</strong> Carlos Eduardo (Tio Carlos)</p>
+      </div>
+
+      <div class="doc-status-item">
+        <div>
+          <strong style="font-size: 0.85rem;">🟢 Vistoria Semestral DETRAN-SP</strong>
+          <p style="font-size: 0.75rem; color: var(--text-muted);" id="parent-modal-detran-date">Válida até 15/11/2026 (Selo nº DETRAN-SP 2026/8849)</p>
+        </div>
+        <span class="countdown-chip">APROVADO</span>
+      </div>
+
+      <div class="doc-status-item">
+        <div>
+          <strong style="font-size: 0.85rem;">🟢 Aferição de Tacógrafo (INMETRO)</strong>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">Certificado nº 99882 (Válido até 10/02/2027)</p>
+        </div>
+        <span class="countdown-chip">APROVADO</span>
+      </div>
+
+      <div class="doc-status-item">
+        <div>
+          <strong style="font-size: 0.85rem;">🟢 CNH Categoria D + Curso de Escolar</strong>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">Exame Toxicológico e Prontuário Limpo</p>
+        </div>
+        <span class="countdown-chip">REGULAR</span>
+      </div>
+
+      <div class="doc-status-item">
+        <div>
+          <strong style="font-size: 0.85rem;">🟢 Seguro de Passageiros (APP)</strong>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">Cobertura total de R$ 100.000 / passageiro</p>
+        </div>
+        <span class="countdown-chip">ATIVO</span>
+      </div>
+
+      <div style="margin-top: 1.25rem; text-align: right;">
+        <button id="btn-close-parent-docs-confirm" class="btn-action" style="background: var(--yellow-brand); color: #09090B;">
+          ✓ Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ATUALIZAR DOCUMENTOS PELO MOTORISTA -->
+  <div id="modal-driver-edit-docs" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <h3 style="font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
+          ✏️ Atualizar Vistoria & Documentos da Sprinter
+        </h3>
+        <button id="btn-close-driver-docs-modal" style="background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-main);">&times;</button>
+      </div>
+
+      <form id="form-driver-update-docs">
+        <div style="margin-bottom: 0.85rem;">
+          <label style="font-size: 0.82rem; font-weight: 700;">Data da Próxima Vistoria do DETRAN-SP:</label>
+          <input type="date" id="input-detran-date" value="2026-11-15" required style="width: 100%; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-app); color: var(--text-main); font-size: 0.85rem; margin-top: 0.25rem;">
+        </div>
+
+        <div style="margin-bottom: 0.85rem;">
+          <label style="font-size: 0.82rem; font-weight: 700;">Número do Selo de Vistoria DETRAN:</label>
+          <input type="text" id="input-detran-seal" value="DETRAN-SP 2026/8849" required style="width: 100%; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-app); color: var(--text-main); font-size: 0.85rem; margin-top: 0.25rem;">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.82rem; font-weight: 700;">Data de Validade do Tacógrafo INMETRO:</label>
+          <input type="date" id="input-tacografo-date" value="2027-02-10" required style="width: 100%; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-app); color: var(--text-main); font-size: 0.85rem; margin-top: 0.25rem;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button type="button" id="btn-cancel-driver-docs" class="btn-action" style="background: #3F3F46; font-size: 0.8rem;">Cancelar</button>
+          <button type="submit" class="btn-action" style="background: var(--yellow-brand); color: #09090B; font-weight: 800; font-size: 0.85rem;">
+            💾 Salvar Novas Vistorias
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL BUSKID EXPRESS: SOLICITAÇÃO DE CORRIDA AVULSA PELOS PAIS -->
+  <div id="modal-express-request" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <h3 style="font-size: 1.05rem; color: var(--yellow-brand); display: flex; align-items: center; gap: 0.4rem;">
+          ⚡ BusKid Express - Transporte Avulso
+        </h3>
+        <button id="btn-close-express-modal" style="background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-main);">&times;</button>
+      </div>
+
+      <form id="form-express-request">
+        <div style="margin-bottom: 0.85rem;">
+          <label style="font-size: 0.82rem; font-weight: 700;">Nome da Criança sem contrato fixo:</label>
+          <input type="text" id="express-child-name" value="Enzo Gabriel" required style="width: 100%; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-app); color: var(--text-main); font-size: 0.85rem; margin-top: 0.25rem;">
+        </div>
+
+        <div style="margin-bottom: 0.85rem;">
+          <label style="font-size: 0.82rem; font-weight: 700;">Endereço de Coleta (Sua casa hoje):</label>
+          <select id="express-pickup-location" style="width: 100%; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-app); color: var(--text-main); font-size: 0.85rem; margin-top: 0.25rem;">
+            <option value="near" selected>📍 Rua Augusta, 850 - Consolação (+800m de desvio / +4 min)</option>
+            <option value="medium">📍 Rua Frei Caneca, 400 - Consolação (+1.8km de desvio / +7 min)</option>
+            <option value="far">📍 Av. Rebouças, 1200 - Pinheiros (+3.2km de desvio / +12 min)</option>
+          </select>
+        </div>
+
+        <!-- SIMULADOR DINÂMICO DE PREÇO POR DISTÂNCIA -->
+        <div style="background: var(--bg-card-subtle); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Perueiro Parceiro Próximo</span>
+              <div style="font-size: 0.9rem; font-weight: 800; margin-top: 0.15rem;">🚐 Tio Carlos (Perua 04)</div>
+              <div id="express-deviation-label" style="font-size: 0.78rem; color: var(--yellow-brand); font-weight: 700;">Desvio estimado: +800 metros (+4 min)</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Valor da Viagem:</span>
+              <div id="express-calculated-price" style="font-size: 1.4rem; font-weight: 800; color: #10B981;">R$ 28,50</div>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+          ℹ️ O motorista receberá sua proposta e avaliará se a rota permite aceitar a coleta sem atrasar as outras crianças.
+        </p>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button type="button" id="btn-cancel-express" class="btn-action" style="background: #3F3F46; font-size: 0.8rem;">Cancelar</button>
+          <button type="submit" class="btn-action" style="background: var(--yellow-brand); color: #09090B; font-weight: 800; font-size: 0.85rem;">
+            📩 Enviar Proposta ao Tio Carlos
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIGURAÇÕES DO SITE -->
+  <div id="modal-settings" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        <h3 style="font-size: 1.1rem;">⚙️ Configurações do BusKid</h3>
+        <button id="btn-close-settings" style="background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-main);">&times;</button>
+      </div>
+
+      <div class="setting-option-row">
+        <div>
+          <strong>🌓 Tema Visual do App</strong>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Escolha a melhor opção para seus olhos</p>
+        </div>
+        <button class="theme-switch-btn" id="btn-modal-theme-toggle" onclick="toggleBusKidTheme()">
+          ☀️ Modo Claro
+        </button>
+      </div>
+
+      <div class="setting-option-row">
+        <div>
+          <strong>🔤 Tamanho do Texto</strong>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Facilita a leitura para o perueiro ao dirigir</p>
+        </div>
+        <select id="select-font-size" style="padding: 0.35rem; border-radius: var(--radius-sm); background: var(--bg-app); color: var(--text-main); border: 1px solid var(--border-subtle); font-size: 0.82rem;">
+          <option value="normal" selected>Padrão (16px)</option>
+          <option value="medium">Médio (+15%)</option>
+          <option value="large">Grande (+30%)</option>
+        </select>
+      </div>
+
+      <div class="setting-option-row">
+        <div>
+          <strong>🔔 Alertas Sonoros</strong>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Tocar som ao receber alerta de falta dos pais</p>
+        </div>
+        <input type="checkbox" id="chk-sound-alerts" checked style="width: 18px; height: 18px; cursor: pointer;">
+      </div>
+
+      <div style="margin-top: 1.25rem; text-align: right;">
+        <button id="btn-save-settings" class="btn-action" style="background: var(--yellow-brand); color: #09090B;">
+          ✓ Salvar Configurações
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE AUSÊNCIA -->
+  <div id="modal-absence" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1rem; color: var(--yellow-accent);">🚨 Comunicar Falta da Sofia</h3>
+        <button id="btn-close-modal" style="background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-main);">&times;</button>
+      </div>
+      <form id="form-absence">
+        <label style="font-size: 0.85rem;"><strong>Motivo da ausência:</strong></label>
+        <div style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+          <label style="background: var(--bg-card-subtle); padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
+            <input type="radio" name="absence-reason" value="Consulta Médica" checked> 🏥 Consulta
+          </label>
+          <label style="background: var(--bg-card-subtle); padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
+            <input type="radio" name="absence-reason" value="Doente"> 🤒 Doente
+          </label>
+        </div>
+
+        <div style="margin-top: 1rem; text-align: right;">
+          <button type="button" id="btn-cancel-absence" class="btn-action" style="background: #3F3F46; font-size: 0.8rem;">Cancelar</button>
+          <button type="submit" class="btn-action" style="background: #EF4444; font-size: 0.8rem; color: #FFFFFF;">🚨 Enviar Aviso</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    BusKid &copy; 2026 - Transporte Escolar Inteligente 🚐💨
+  </footer>
+
+  <!-- Leaflet Map Library JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  
+  <!-- Standalone High-Performance Bundle (Cache-busting) -->
+  <script src="js/buskid-bundle.js?v=4.0"></script>
+</body>
+</html>
