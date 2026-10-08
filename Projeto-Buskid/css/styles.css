@@ -1,0 +1,586 @@
+/* ============================================================
+  BUSKID - COMPLETE LIGHT & DARK THEME ENGINE + VAN DOCS & QUALITY SEAL
+   ============================================================ */
+
+/* 1. MODO CLARO (LIGHT MODE - PADRÃO CLEAN) */
+:root, [data-theme="light"] {
+  --bg-app: #FAF9F5;
+  --bg-card: #FFFFFF;
+  --bg-card-subtle: #F9FAFB;
+  --border-subtle: #E5E7EB;
+
+  --text-main: #18181B;
+  --text-muted: #71717A;
+  --text-dark-muted: #A1A1AA;
+
+  --yellow-accent: #FDE047;
+  --yellow-brand: #EAB308;
+  --dark-obsidian: #18181B;
+  --dark-card: #27272A;
+  --dark-subtle: #3F3F46;
+
+  --status-green-bg: #D1FAE5;
+  --status-green-text: #065F46;
+  --status-yellow-bg: #FEF3C7;
+  --status-yellow-text: #92400E;
+  --status-red-bg: #FEE2E2;
+  --status-red-text: #991B1B;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-pill: 9999px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 2. MODO ESCURO (DARK MODE - NOTURNO REAL) */
+[data-theme="dark"] {
+  --bg-app: #09090B;
+  --bg-card: #18181B;
+  --bg-card-subtle: #27272A;
+  --border-subtle: #27272A;
+
+  --text-main: #F4F4F5;
+  --text-muted: #A1A1AA;
+  --text-dark-muted: #71717A;
+
+  --status-green-bg: #064E3B;
+  --status-green-text: #A7F3D0;
+  --status-yellow-bg: #78350F;
+  --status-yellow-text: #FDE047;
+  --status-red-bg: #7F1D1D;
+  --status-red-text: #FCA5A5;
+
+  --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* NAVBAR SLIM */
+.navbar {
+  background-color: #18181B !important;
+  color: #FFFFFF !important;
+  padding: 0.85rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 9999 !important;
+  border-bottom: 3px solid var(--yellow-brand);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.brand-icon {
+  background: var(--yellow-brand);
+  color: #09090B;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.brand-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.brand-title span {
+  color: var(--yellow-accent);
+}
+
+.brand-tagline {
+  font-size: 0.7rem;
+  color: #A1A1AA;
+  font-weight: 500;
+}
+
+/* SELETOR DE PERFIL PILLS */
+.role-switcher-container {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #27272A;
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid #3F3F46;
+}
+
+.role-switcher-label {
+  font-size: 0.72rem;
+  color: #A1A1AA;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0 0.5rem;
+}
+
+.role-btn {
+  background: transparent;
+  border: none;
+  color: #A1A1AA;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.role-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255,255,255,0.08);
+}
+
+.role-btn.active {
+  background: var(--yellow-brand);
+  color: #09090B;
+  font-weight: 800;
+}
+
+/* BOTÃO DE TEMA DA NAVBAR */
+.theme-switch-btn {
+  background: #27272A;
+  color: #FFFFFF;
+  border: 1px solid #3F3F46;
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.theme-switch-btn:hover {
+  background: var(--yellow-brand);
+  color: #09090B;
+  border-color: var(--yellow-brand);
+}
+
+/* CONTAINER DA APLICAÇÃO */
+.app-container {
+  max-width: 1240px;
+  margin: 1.5rem auto;
+  padding: 0 1.25rem;
+  width: 100%;
+  flex: 1;
+}
+
+/* TOP BAR DE DESTAQUE TCC */
+.tcc-top-bar {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.tcc-top-badge {
+  background: var(--status-green-bg);
+  color: var(--status-green-text);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
+/* CARDS RESPONSIVOS E TEMATIZÁVEIS */
+.card {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 1.25rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-main);
+}
+
+/* CARD DE DOCUMENTAÇÃO & SELO DE SEGURANÇA */
+.quality-seal-box {
+  background: linear-gradient(135deg, #064E3B 0%, #047857 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 15px rgba(6, 78, 59, 0.3);
+}
+
+.doc-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-card-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 0.5rem;
+}
+
+.countdown-chip {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--status-green-bg);
+  color: var(--status-green-text);
+}
+
+/* CARD DE PROPOSTA AVULSA BUSKID EXPRESS NO MOTORISTA */
+.express-offer-card {
+  background: linear-gradient(135deg, #18181B 0%, #09090B 100%);
+  color: #FFFFFF;
+  border: 2px solid var(--yellow-brand);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 25px rgba(234, 179, 8, 0.25);
+  animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from { border-color: #EAB308; box-shadow: 0 0 12px rgba(234,179,8,0.2); }
+  to { border-color: #FDE047; box-shadow: 0 0 24px rgba(234,179,8,0.5); }
+}
+
+.express-badge {
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #09090B;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* GRIDS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.main-dashboard-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1.25rem; }
+
+@media (max-width: 960px) {
+  .grid-2, .grid-3, .grid-4, .main-dashboard-grid { grid-template-columns: 1fr; }
+}
+
+/* STAT BOXES */
+.stat-box {
+  background-color: var(--bg-card-subtle);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  transition: background-color 0.3s;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-top: 0.15rem;
+}
+
+/* PROXIMIDADE E MAPA */
+.proximity-container {
+  background: #27272A;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+}
+
+.proximity-chip {
+  background: #18181B;
+  color: #FFFFFF;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.proximity-chip strong {
+  color: var(--yellow-accent);
+}
+
+/* CONTÊINER DO MAPA ISOLADO */
+#map-container {
+  width: 100%;
+  height: 420px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  position: relative !important;
+  isolation: isolate !important;
+  z-index: 1 !important;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background: #18181B;
+  position: relative;
+  z-index: 1;
+}
+
+/* LEAFLET CONTROLS */
+.leaflet-top.leaflet-right {
+  top: 10px !important;
+  right: 10px !important;
+}
+
+.leaflet-control-zoom {
+  border: 2px solid #09090B !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background-color: #18181B !important;
+  color: #FFFFFF !important;
+  border-bottom: 1px solid #3F3F46 !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: var(--yellow-brand) !important;
+  color: #09090B !important;
+}
+
+/* LISTA DE CHAMADA DOS ALUNOS */
+.student-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background-color: var(--bg-card-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s ease;
+}
+
+.student-row:hover {
+  border-color: var(--yellow-brand);
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--yellow-brand);
+}
+
+.student-details h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.student-details p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* BADGES */
+.badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badge-green { background: var(--status-green-bg); color: var(--status-green-text); }
+.badge-yellow { background: var(--status-yellow-bg); color: var(--status-yellow-text); }
+.badge-red { background: var(--status-red-bg); color: var(--status-red-text); }
+
+/* BOTÕES DE AÇÃO */
+.btn-action {
+  background: #18181B;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.btn-action:hover {
+  background: var(--yellow-brand);
+  color: #09090B;
+}
+
+.btn-whatsapp {
+  background: #25D366;
+  color: #FFFFFF;
+}
+
+/* MODAL DE CONFIGURAÇÕES & AUSÊNCIA */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000 !important;
+  padding: 1rem;
+}
+
+.modal-dialog {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 520px;
+  padding: 1.5rem;
+  border: 2px solid var(--yellow-brand);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: background-color 0.3s;
+}
+
+.setting-option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* TOAST MINIMALISTA */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #18181B;
+  color: #FFFFFF;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid #10B981;
+  z-index: 10000 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* TABS MOTORISTA */
+.tab-group {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.4rem;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.45rem 0.85rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.tab-btn.active {
+  background-color: var(--bg-card-subtle);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+}
+
+/* VIEWS WRAPPER */
+.role-view { display: none; }
+.role-view.active { display: block; }
+
+footer {
+  text-align: center;
+  padding: 1.25rem;
+  font-size: 0.78rem;
+  color: #A1A1AA;
+  background: #18181B;
+  margin-top: auto;
+  border-top: 3px solid var(--yellow-brand);
+}

@@ -1,0 +1,17 @@
+# Java / Maven
+target/
+*.class
+*.jar
+
+# Base de Dados Local (SQLite)
+*.db
+*.sqlite
+*.sqlite3
+
+# VS Code e WSL
+.vscode/
+.idea/
+*.swp
+
+# Node / JS
+node_modules/
